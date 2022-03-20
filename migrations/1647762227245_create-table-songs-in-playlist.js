@@ -13,11 +13,13 @@ exports.up = (pgm) => {
       type: 'TEXT',
       notNull: true,
       references: 'songs',
+      onDelete: 'cascade',
     },
     playlist_id: {
       type: 'TEXT',
       notNull: true,
       references: 'playlists',
+      onDelete: 'cascade',
     },
   });
 };
