@@ -16,9 +16,9 @@ exports.up = (pgm) => {
     owner: {
       type: 'TEXT',
       notNull: true,
-      references: 'users',
     },
   });
+  pgm.addConstraint('playlists', 'fk_playlists.owner_users.id', 'FOREIGN KEY(owner) REFERENCES users(id) ON DELETE CASCADE');
 };
 
 exports.down = (pgm) => {

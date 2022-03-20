@@ -33,6 +33,7 @@ exports.up = (pgm) => {
       type: 'VARCHAR(50)',
       references: 'albums',
       notNull: false,
+      onDelete: 'cascade',
     },
   });
 };
