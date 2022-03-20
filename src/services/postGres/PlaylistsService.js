@@ -2,18 +2,19 @@ const {nanoid} = require('nanoid');
 const {Pool} = require('pg');
 const InvariantError = require('../../exceptions/InvariantError');
 const NotFoundError = require('../../exceptions/NotFoundError');
+const AuthorizationError = require('../../exceptions/AuthorizationError');
 
 class SongService {
   constructor() {
     this._pool = new Pool();
   }
 
-  async addPlaylist({name}) {
+  async addPlaylist({name, owner}) {
     const id = 'playlist-'+nanoid(16);
 
     const query = {
-      text: 'INSERT INTO playlists VALUES($1, $2) RETURNING id',
-      values: [id, name],
+      text: 'INSERT INTO playlists VALUES($1, $2, $3) RETURNING id',
+      values: [id, name, owner],
     };
 
     const result = await this._pool.query(query);
@@ -25,10 +26,10 @@ class SongService {
     return result.rows[0].id;
   }
 
-  async getPlaylists() {
+  async getPlaylists(owner) {
     const query = {
-      text: 'SELECT id, name, owner FROM playlists',
-      values: [title, performer],
+      text: 'SELECT id, name, owner FROM playlists WHERE owner = $1',
+      values: [owner],
     };
 
     const result = await this._pool.query(query);
@@ -48,7 +49,7 @@ class SongService {
     }
   }
 
-  async addSongByIdToPlaylist(songId, playlistId) {
+  async addSongToPlaylist(songId, playlistId) {
     const nanoid = 'playlist_song-' + nanoid(16);
     const query = {
       text: 'INSERT INTO songs_in_playlists VALUES($1, $2, $3) RETURNING id',
@@ -64,10 +65,10 @@ class SongService {
     return result.rows[0].id;
   }
 
-  async getPlaylistSong(id) {
+  async getPlaylistSong(id, owner) {
     const query1 = {
-      text: 'SELECT id, name, owner FROM playlists WHERE id = $1',
-      values: [id],
+      text: 'SELECT id, name, owner FROM playlists WHERE id = $1 AND owner = $2',
+      values: [id, owner],
     };
 
     const query2 = {
@@ -104,6 +105,21 @@ class SongService {
     const result = await this._pool.query(query);
     if (!result.rows.length) {
       throw new NotFoundError('Delete failed. Id not found');
+    }
+  }
+
+  async verifyNoteOwner(id, owner) {
+    const query = {
+      text: 'SELECT * FROM playlists WHERE id = $1',
+      values: [id],
+    };
+    const result = await this._pool.query(query);
+    if (!result.rows.length) {
+      throw new NotFoundError('playlist tidak ditemukan');
+    }
+    const note = result.rows[0];
+    if (note.owner !== owner) {
+      throw new AuthorizationError('Anda tidak berhak mengakses resource ini');
     }
   }
 }
