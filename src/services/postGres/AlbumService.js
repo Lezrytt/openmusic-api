@@ -53,7 +53,6 @@ class AlbumService {
     }
 
     return merge;
-    // return result.rows[0];
   }
 
   async editAlbumById(id, {name, year}) {
