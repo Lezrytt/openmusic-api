@@ -1,0 +1,27 @@
+{
+  "name": "open-music-api",
+  "version": "1.0.0",
+  "description": "Open Music API Submission 1",
+  "main": "index.js",
+  "dependencies": {
+    "@hapi/hapi": "^20.2.1",
+    "dotenv": "^16.0.0",
+    "joi": "^17.6.0",
+    "nanoid": "^3.3.1",
+    "node-pg-migrate": "^6.2.1",
+    "pg": "^8.7.3"
+  },
+  "devDependencies": {
+    "eslint": "^8.11.0",
+    "eslint-config-google": "^0.14.0",
+    "nodemon": "^2.0.15"
+  },
+  "scripts": {
+    "start-prod": "NODE_ENV=production node ./src/server.js",
+    "start-dev": "nodemon ./src/server.js",
+    "lint": "eslint ./src",
+    "migrate": "node-pg-migrate"
+  },
+  "author": "lezrytt",
+  "license": "ISC"
+}
