@@ -4,7 +4,6 @@
 exports.shorthands = undefined;
 
 exports.up = (pgm) => {
-  // membuat table collaborations
   pgm.createTable('collaborations', {
     id: {
       type: 'VARCHAR(50)',

@@ -5,10 +5,11 @@ const NotFoundError = require('../../exceptions/NotFoundError');
 const AuthorizationError = require('../../exceptions/AuthorizationError');
 const ClientError = require('../../exceptions/ClientError');
 
-class SongService {
-  constructor(collaborationService) {
+class PlaylistsService {
+  constructor(collaborationService, activitiesService) {
     this._pool = new Pool();
     this._collaborationService = collaborationService;
+    this._activitiesService = activitiesService;
   }
 
   async addPlaylist({name, owner}) {
@@ -24,6 +25,9 @@ class SongService {
     if (!result.rows[0].id) {
       throw new InvariantError('Fail to add playlist');
     }
+    const songId = '-';
+    const action = 'Create Playlist';
+    await this._activitiesService.addActivity(id, songId, owner, action);
 
     return result.rows[0].id;
   }
@@ -54,10 +58,10 @@ class SongService {
     return result.rows;
   }
 
-  async deletePlaylistById(id) {
+  async deletePlaylistById(playlistId) {
     const query = {
       text: 'DELETE FROM playlists WHERE id = $1 RETURNING id',
-      values: [id],
+      values: [playlistId],
     };
 
     const result = await this._pool.query(query);
@@ -65,9 +69,11 @@ class SongService {
     if (!result.rows.length) {
       throw new NotFoundError('Delete failed. Id not found');
     }
+    // problem
+    await this._activitiesService.deleteActivity(playlistId);
   }
 
-  async addSongToPlaylist(songId, playlistId) {
+  async addSongToPlaylist(songId, playlistId, credentialId) {
     const id = 'playlist_song-' + nanoid(16);
     const query = {
       text: 'INSERT INTO songs_in_playlists VALUES($1, $2, $3) RETURNING id',
@@ -80,19 +86,16 @@ class SongService {
       throw new InvariantError('Fail to add song to playlist');
     }
 
+    const action = 'add';
+    const userId = credentialId;
+
+    await this._activitiesService.addActivity(playlistId, songId, userId, action);
+
     return result.rows[0].id;
   }
 
   async getPlaylistSong(id, owner) {
-    const queryCollab = {
-      text: `SELECT playlist_id from collaborations
-      WHERE playlist_id = $1 and user_id = $2`,
-      values: [id, owner],
-    };
-
-    const collabResult = await this._pool.query(queryCollab);
-
-    const playlistId = collabResult.rows[0].playlist_id;
+    const playlistId = id;
 
     const query1 = {
       text: `SELECT playlists.id, playlists.name, users.username FROM playlists
@@ -126,7 +129,7 @@ class SongService {
     return combine;
   }
 
-  async deleteSongFromPlaylist(id, playlistId) {
+  async deleteSongFromPlaylist(id, playlistId, credentialId) {
     const query = {
       text: 'DELETE FROM songs_in_playlists WHERE song_id = $1 AND playlist_id = $2 RETURNING id',
       values: [id, playlistId],
@@ -136,6 +139,12 @@ class SongService {
     if (!result.rows.length) {
       throw new ClientError('Delete failed. Id not found');
     }
+
+    const action = 'delete';
+    const songId = id;
+    const userId = credentialId;
+
+    await this._activitiesService.addActivity(playlistId, songId, userId, action);
   }
 
   async verifyPlaylistOwner(playlistId, userId) {
@@ -182,4 +191,4 @@ class SongService {
   }
 }
 
-module.exports = SongService;
+module.exports = PlaylistsService;
