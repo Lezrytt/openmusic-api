@@ -31,9 +31,9 @@ exports.up = (pgm) => {
     },
   });
 
-  pgm.addConstraint('collaborations', 'fk_collaborations.playli st_id_playlists.id', 'FOREIGN KEY(playlist_id) REFERENCES playlists(id) ON DELETE CASCADE');
+  pgm.addConstraint('playlist_song_activities', 'fk_playlist_song_activities.playlist_id_playlists.id', 'FOREIGN KEY(playlist_id) REFERENCES playlists(id) ON DELETE CASCADE');
 };
 
 exports.down = (pgm) => {
-  pgm.dropTable('collaborations');
+  pgm.dropTable('playlist_song_activities');
 };

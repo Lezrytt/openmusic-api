@@ -64,13 +64,12 @@ class PlaylistsService {
       values: [playlistId],
     };
 
+    await this._activitiesService.deleteActivity(playlistId);
     const result = await this._pool.query(query);
 
     if (!result.rows.length) {
       throw new NotFoundError('Delete failed. Id not found');
     }
-    // problem
-    await this._activitiesService.deleteActivity(playlistId);
   }
 
   async addSongToPlaylist(songId, playlistId, credentialId) {
