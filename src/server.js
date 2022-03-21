@@ -34,7 +34,7 @@ const CollaborationsValidator = require('./validator/collaborations');
 // activities
 const activities = require('./api/activities');
 const ActivitiesService = require('./services/postGres/ActivitiesService');
-const ActivitiesValidator = require('./validator/activities');
+
 
 const init = async () => {
   const collaborationsService = new CollaborationsService();
@@ -128,7 +128,6 @@ const init = async () => {
       options: {
         activitiesService,
         playlistsService,
-        validator: ActivitiesValidator,
       },
     },
   ]);

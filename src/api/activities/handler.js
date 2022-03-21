@@ -1,10 +1,9 @@
 const ClientError = require('../../exceptions/ClientError');
 
 class ActivitiesHandler {
-  constructor(activitiesService, playlistService, validator) {
+  constructor(activitiesService, playlistService) {
     this._activitiesService = activitiesService;
     this._playlistsService = playlistService;
-    this._validator = validator;
 
     this.postActivityHandler = this.postActivityHandler.bind(this);
     this.getActivitiesHandler = this.getActivitiesHandler.bind(this);
