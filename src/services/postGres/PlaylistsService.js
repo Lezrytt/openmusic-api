@@ -29,14 +29,28 @@ class SongService {
   }
 
   async getPlaylists(owner) {
+    const queryCollab = {
+      text: `SELECT playlist_id from collaborations where user_id = $1`,
+      values: [owner],
+    };
+    const result2 = await this._pool.query(queryCollab);
+
+    let playlistId = '';
+    if (result2.rows.length) {
+      const result = result2.rows[0].playlist_id;
+      playlistId = result;
+    }
     const query = {
       text: `SELECT playlists.id, playlists.name, users.username FROM playlists
-      LEFT JOIN users ON users.id = playlists.owner 
-      WHERE owner = $1`,
-      values: [owner],
+      LEFT JOIN users ON users.id = playlists.owner
+      WHERE owner = $1 or playlists.id = $2`,
+      values: [owner, playlistId],
     };
 
     const result = await this._pool.query(query);
+
+    console.log();
+
     return result.rows;
   }
 
@@ -70,19 +84,29 @@ class SongService {
   }
 
   async getPlaylistSong(id, owner) {
+    const queryCollab = {
+      text: `SELECT playlist_id from collaborations
+      WHERE playlist_id = $1 and user_id = $2`,
+      values: [id, owner],
+    };
+
+    const collabResult = await this._pool.query(queryCollab);
+
+    const playlistId = collabResult.rows[0].playlist_id;
+
     const query1 = {
       text: `SELECT playlists.id, playlists.name, users.username FROM playlists
       INNER JOIN users ON users.id = playlists.owner 
-      WHERE owner = $1 and playlists.id = $2`,
-      values: [owner, id],
+      WHERE playlists.id = $3 OR owner = $1 and playlists.id = $2`,
+      values: [owner, id, playlistId],
     };
 
     const query2 = {
       text: `SELECT songs.id, songs.title, songs.performer FROM songs
       LEFT JOIN songs_in_playlists
       ON songs_in_playlists.song_id = songs.id
-      WHERE songs_in_playlists.playlist_id = $1`,
-      values: [id],
+      WHERE songs_in_playlists.playlist_id = $1 or songs_in_playlists.playlist_id = $2`,
+      values: [id, playlistId],
     };
 
     const result = await this._pool.query(query1);
@@ -96,7 +120,7 @@ class SongService {
     };
 
     if (!result.rows.length) {
-      throw new NotFoundError('Album not found');
+      throw new NotFoundError('Playlist not found');
     }
 
     return combine;
@@ -114,10 +138,10 @@ class SongService {
     }
   }
 
-  async verifyPlaylistOwner(id, owner) {
+  async verifyPlaylistOwner(playlistId, userId) {
     const query = {
       text: 'SELECT * FROM playlists WHERE id = $1',
-      values: [id],
+      values: [playlistId],
     };
     const result = await this._pool.query(query);
 
@@ -125,7 +149,7 @@ class SongService {
       throw new NotFoundError('Playlist not found');
     }
     const playlist = result.rows[0];
-    if (playlist.owner !== owner) {
+    if (playlist.owner !== userId) {
       throw new AuthorizationError('You don\'t have the right to access this resource');
     }
   }
