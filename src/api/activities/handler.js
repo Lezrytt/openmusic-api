@@ -11,7 +11,6 @@ class ActivitiesHandler {
 
   async postActivityHandler(request, h) {
     try {
-      // this._validator.validateCollaborationPayload(request.payload);
       const {id} = request.params;
       const {id: credentialId} = request.auth.credentials;
 
